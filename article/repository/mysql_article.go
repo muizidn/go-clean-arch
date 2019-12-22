@@ -41,8 +41,9 @@ func (m *mysqlArticleRepository) fetch(ctx context.Context, query string, args .
 	}()
 
 	result := make([]*models.Article, 0)
+
 	for rows.Next() {
-		t := new(models.Article)
+		t := new(models.ArticleDTO)
 		authorID := int64(0)
 		err = rows.Scan(
 			&t.ID,
@@ -60,7 +61,7 @@ func (m *mysqlArticleRepository) fetch(ctx context.Context, query string, args .
 		t.Author = models.Author{
 			ID: authorID,
 		}
-		result = append(result, t)
+		result = append(result, t.ToArticle())
 	}
 
 	return result, nil
@@ -89,7 +90,7 @@ func (m *mysqlArticleRepository) Fetch(ctx context.Context, cursor string, num i
 }
 func (m *mysqlArticleRepository) GetByID(ctx context.Context, id int64) (res *models.Article, err error) {
 	query := `SELECT id,title,content, author_id, updated_at, created_at
-  						FROM article WHERE ID = ?`
+  						FROM article WHERE ID LIKE ?`
 
 	list, err := m.fetch(ctx, query, id)
 	if err != nil {
@@ -107,7 +108,7 @@ func (m *mysqlArticleRepository) GetByID(ctx context.Context, id int64) (res *mo
 
 func (m *mysqlArticleRepository) GetByTitle(ctx context.Context, title string) (res *models.Article, err error) {
 	query := `SELECT id,title,content, author_id, updated_at, created_at
-  						FROM article WHERE title = ?`
+  						FROM article WHERE title LIKE ?`
 
 	list, err := m.fetch(ctx, query, title)
 	if err != nil {
@@ -144,7 +145,7 @@ func (m *mysqlArticleRepository) Store(ctx context.Context, a *models.Article) e
 }
 
 func (m *mysqlArticleRepository) Delete(ctx context.Context, id int64) error {
-	query := "DELETE FROM article WHERE id = ?"
+	query := "DELETE FROM article WHERE id LIKE ?"
 
 	stmt, err := m.Conn.PrepareContext(ctx, query)
 	if err != nil {
@@ -170,7 +171,7 @@ func (m *mysqlArticleRepository) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 func (m *mysqlArticleRepository) Update(ctx context.Context, ar *models.Article) error {
-	query := `UPDATE article set title=?, content=?, author_id=?, updated_at=? WHERE ID = ?`
+	query := `UPDATE article set title=?, content=?, author_id=?, updated_at=? WHERE ID LIKE ?`
 
 	stmt, err := m.Conn.PrepareContext(ctx, query)
 	if err != nil {

@@ -47,6 +47,7 @@ func (a *articleUsecase) fillAuthorDetails(c context.Context, data []*models.Art
 	for authorID := range mapAuthors {
 		authorID := authorID
 		g.Go(func() error {
+			defer close(chanAuthor)
 			res, err := a.authorRepo.GetByID(ctx, authorID)
 			if err != nil {
 				return err
@@ -62,7 +63,6 @@ func (a *articleUsecase) fillAuthorDetails(c context.Context, data []*models.Art
 			logrus.Error(err)
 			return
 		}
-		close(chanAuthor)
 	}()
 
 	for author := range chanAuthor {
@@ -91,7 +91,6 @@ func (a *articleUsecase) Fetch(c context.Context, cursor string, num int64) ([]*
 
 	ctx, cancel := context.WithTimeout(c, a.contextTimeout)
 	defer cancel()
-
 	listArticle, nextCursor, err := a.articleRepo.Fetch(ctx, cursor, num)
 	if err != nil {
 		return nil, "", err

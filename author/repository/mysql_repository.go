@@ -46,6 +46,6 @@ func (m *mysqlAuthorRepo) getOne(ctx context.Context, query string, args ...inte
 }
 
 func (m *mysqlAuthorRepo) GetByID(ctx context.Context, id int64) (*models.Author, error) {
-	query := `SELECT id, name, created_at, updated_at FROM author WHERE id=?`
+	query := `SELECT id, name, created_at, updated_at FROM author WHERE id LIKE ?`
 	return m.getOne(ctx, query, id)
 }
