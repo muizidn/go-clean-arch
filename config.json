@@ -7,11 +7,11 @@
     "timeout":2
   },
   "database": {
-      "host": "mysql",
+      "host": "sql12.freesqldatabase.com",
       "port": "3306",
-      "user": "user",
-      "pass": "password",
-      "name": "article"
+      "user": "sql12316644",
+      "pass": "62ecncYfJy",
+      "name": "sql12316644"
   }
 
 }
