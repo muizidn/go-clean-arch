@@ -10,6 +10,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/viper"
 
 	_articleHttpDeliver "github.com/bxcodec/go-clean-arch/article/delivery/http"
@@ -32,21 +33,14 @@ func init() {
 }
 
 func main() {
-	dbHost := viper.GetString(`database.host`)
-	dbPort := viper.GetString(`database.port`)
-	dbUser := viper.GetString(`database.user`)
-	dbPass := viper.GetString(`database.pass`)
-	dbName := viper.GetString(`database.name`)
-	connection := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPass, dbHost, dbPort, dbName)
-	val := url.Values{}
-	val.Add("parseTime", "1")
-	val.Add("loc", "Asia/Jakarta")
-	dsn := fmt.Sprintf("%s?%s", connection, val.Encode())
-	dbConn, err := sql.Open(`mysql`, dsn)
-	if err != nil && viper.GetBool("debug") {
-		fmt.Println(err)
-	}
-	err = dbConn.Ping()
+	var db *sql.DB
+	// db = mysqlMain()
+	db = sqliteMain()
+	fMain(db)
+}
+
+func fMain(dbConn *sql.DB) {
+	err := dbConn.Ping()
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
@@ -70,4 +64,35 @@ func main() {
 	_articleHttpDeliver.NewArticleHandler(e, au)
 
 	log.Fatal(e.Start(viper.GetString("server.address")))
+}
+
+func mysqlMain() *sql.DB {
+	dbHost := viper.GetString(`database.host`)
+	dbPort := viper.GetString(`database.port`)
+	dbUser := viper.GetString(`database.user`)
+	dbPass := viper.GetString(`database.pass`)
+	dbName := viper.GetString(`database.name`)
+	connection := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPass, dbHost, dbPort, dbName)
+	val := url.Values{}
+	val.Add("parseTime", "1")
+	val.Add("loc", "Asia/Jakarta")
+	dsn := fmt.Sprintf("%s?%s", connection, val.Encode())
+	dbConn, err := sql.Open(`mysql`, dsn)
+	if err != nil && viper.GetBool("debug") {
+		fmt.Println(err)
+	}
+	return dbConn
+}
+
+func sqliteMain() *sql.DB {
+	db, _ := sql.Open("sqlite3", "./article.sqlite?charset=utf8&parseTime=true")
+	// file, _ := os.Open("./article.sqlite3.sql")
+	// ddl, _ := ioutil.ReadAll(file)
+	// stmt, _ := db.Prepare(string(ddl))
+	// _, err := stmt.Exec()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	return db
+
 }
